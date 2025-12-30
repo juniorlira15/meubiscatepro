@@ -1,0 +1,439 @@
+@import url('https://fonts.googleapis.com/css?family=Kameron');
+
+h1,
+h2 {
+    font-family: 'Kameron', serif;
+    font-weight: bold;
+}
+
+.navbar-header {
+    margin-top: .5rem;
+}
+
+.navbar-header img { 
+    width: 250px;
+}
+
+header col {
+    vertical-align: bottom;
+}
+
+.header-title {
+    margin-bottom: 0;
+}
+
+.google_map {
+    width: 100%;
+    height: 500px;
+}
+
+.row {
+    --bs-gutter-x: 0 !important;
+}
+
+.address_container {
+    background-color: lightgreen;
+    margin-top: 1rem;
+    padding: 1rem .5rem;
+    overflow: hidden;
+}
+
+.address_container label {
+    font-weight: bold;
+    margin: .5rem 0;
+}
+
+.address_container #property_address_input {
+    width: 100%;
+    padding: .5rem .25rem;
+}
+
+.address_container button {
+    padding: .5rem 1.25rem;
+    margin-left: 1rem;
+}
+
+.app_controls {
+    background-color: lightblue;
+    padding: 1rem .5rem;
+    text-align: center;
+    vertical-align: middle;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+/* Painel de Área do Telhado para Orçamentos */
+#roof_area_panel {
+    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+    padding: 2rem;
+    border-radius: 15px;
+    margin: 1rem;
+    color: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+#roof_area_panel h2 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.roof-area-result {
+    background: white;
+    padding: 2rem 3rem;
+    border-radius: 15px;
+    display: inline-block;
+    margin: 1rem 0;
+}
+
+.roof-area-value {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #2E7D32;
+    line-height: 1;
+}
+
+.roof-area-unit {
+    font-size: 1.2rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.roof-area-note {
+    opacity: 0.9;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Lista de segmentos */
+#roof_segments_list {
+    background: #f5f5f5;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin: 0 1rem;
+}
+
+#roof_segments_list h3 {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+#segments_container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.segment-card {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.segment-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.segment-card.selected {
+    border-color: #2E7D32;
+    background: #E8F5E9;
+}
+
+.segment-card .segment-number {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 0.25rem;
+}
+
+.segment-card .segment-area {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2E7D32;
+}
+
+.segment-card .segment-area-unit {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Header do segmento com botão de remoção */
+.segment-card .segment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.segment-card .segment-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.segment-card .segment-toggle-btn:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para segmento excluído */
+.segment-card.excluded {
+    background: #f5f5f5;
+    border-color: #bdbdbd;
+    opacity: 0.7;
+}
+
+.segment-card.excluded .segment-area {
+    color: #9E9E9E;
+    text-decoration: line-through;
+}
+
+.segment-card.excluded .segment-number {
+    color: #bdbdbd;
+}
+
+.segment-card.excluded:hover {
+    opacity: 0.9;
+}
+
+.segment-excluded-label {
+    font-size: 0.7rem;
+    color: #D32F2F;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-top: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+/* Instrução de remoção de segmentos */
+.segment-instruction {
+    background: #FFF3E0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #FF9800;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #E65100;
+}
+
+.segment-instruction .marker-example {
+    display: inline-block;
+    color: #2E7D32;
+    font-size: 1.2rem;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+/* Barra de instruções */
+.instruction-bar {
+    background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-size: 1rem;
+}
+
+.instruction-bar strong {
+    color: #FFEB3B;
+}
+
+/* Container do mapa com posição relativa para o loading */
+.google_map_container {
+    position: relative;
+}
+
+/* Indicador de carregamento */
+#loading_indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 2rem 3rem;
+    border-radius: 15px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Informações de localização */
+.location-info {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 1.5rem;
+    border-radius: 10px;
+    height: 100%;
+}
+
+.location-info h3 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.location-info p {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.location-tip {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.85rem !important;
+    opacity: 0.9;
+}
+
+/* Painel de erro */
+#error_panel {
+    margin: 1rem;
+}
+
+.error-message {
+    background: linear-gradient(135deg, #D32F2F 0%, #C62828 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.error-message h3 {
+    margin-bottom: 0.5rem;
+}
+
+/* Cursor do mapa */
+.google_map {
+    cursor: crosshair !important;
+}
+
+/* Marcador arrastável - estilo visual */
+.custom-marker-label {
+    background: #2E7D32;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* ============================================
+   SELETOR DE MÉTODO DE SEGMENTAÇÃO
+   ============================================ */
+
+.segmentation-selector {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 1rem;
+    margin: 0;
+}
+
+.selector-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.selector-container label {
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-right: 0.5rem;
+}
+
+.method-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.method-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 90px;
+}
+
+.method-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.method-btn.active {
+    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+    border-color: #4CAF50;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4);
+}
+
+.method-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.method-name {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.method-status {
+    font-size: 0.6rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.method-btn.active .method-status {
+    color: #A5D6A7;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .selector-container {
+        flex-direction: column;
+    }
+    
+    .method-buttons {
+        width: 100%;
+    }
+    
+    .method-btn {
+        flex: 1;
+        min-width: 70px;
+    }
+}
