@@ -13,7 +13,7 @@
 //
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // Global Variables
-const apiKey = "YOUR_GOOGLE_API_KEY_HERE"; // ⚠️ SUBSTITUA pela sua chave da API do Google
+const apiKey = "AIzaSyB1hSEH2QjrDs3UN9ypCXsOVRs3HinF8ng"; // ⚠️ SUBSTITUA pela sua chave da API do Google
 
 // Latitude: 32.6579371, Longitude: -117.0210882
 var address;
@@ -25,11 +25,14 @@ var map;
 var solar_layers;
 
 // Variáveis para seleção de telhados
-var roofSegments = [];           // Array de polígonos dos segmentos de telhado
+var roofSegments = [];           // Array de polígonos e marcadores dos segmentos de telhado
+var segmentPolygons = [];         // Array separado apenas para polígonos dos segmentos
+var segmentMarkers = [];         // Array separado apenas para marcadores dos segmentos
 var selectedRoofSegment = null;  // Segmento atualmente selecionado
 var roofSegmentData = [];        // Dados dos segmentos de telhado da API
 var excludedSegments = [];       // Índices dos segmentos excluídos pelo usuário
 var originalTotalArea = 0;       // Área total original antes das exclusões
+var showSegmentPolygons = true;  // Controla a visibilidade dos polígonos dos segmentos
 
 // Marcador de seleção do usuário
 var userMarker = null;           // Marcador arrastável do usuário

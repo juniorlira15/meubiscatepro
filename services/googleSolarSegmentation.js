@@ -66,8 +66,20 @@ const GoogleSolarSegmentation = {
       return result;
       
     } catch (error) {
-      console.error('GoogleSolarSegmentation: Erro', error);
-      result.error = error.message;
+      // Tratar erros específicos da API
+      if (error.message === "API_KEY_NOT_CONFIGURED") {
+        result.error = 'API Key do Google não configurada. Configure em global.js e index.php';
+      } else if (error.message === "API_KEY_INVALID") {
+        result.error = 'API Key do Google inválida. Verifique se a chave está correta e se as APIs estão ativadas.';
+      } else if (error.message === "API_KEY_FORBIDDEN") {
+        result.error = 'API Key do Google sem permissão. Verifique as restrições da chave.';
+      } else if (error.message === "NO_BUILDING_DATA") {
+        result.error = 'Nenhum dado de telhado encontrado para esta localização';
+      } else if (error.message === "NETWORK_ERROR") {
+        result.error = 'Erro de conexão. Verifique sua internet.';
+      } else {
+        result.error = error.message || 'Erro desconhecido ao acessar Google Solar API';
+      }
       return result;
     }
   },

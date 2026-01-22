@@ -12,6 +12,11 @@
 // --------------------------------------------------------------------------------------------------------------------------------------------
 // Get data from latitude and longitude
 async function findClosestBuildingInsights(latitude, longitude, apiKey) {
+  // Validar API key
+  if (!apiKey || apiKey === "YOUR_GOOGLE_API_KEY_HERE" || apiKey.includes("YOUR_GOOGLE_API_KEY")) {
+    throw new Error("API_KEY_NOT_CONFIGURED");
+  }
+
   // Form the request URL
   const url = `https://solar.googleapis.com/v1/buildingInsights:findClosest?location.latitude=${latitude}&location.longitude=${longitude}&requiredQuality=HIGH&key=${apiKey}`;
 
@@ -19,11 +24,43 @@ async function findClosestBuildingInsights(latitude, longitude, apiKey) {
     // Make the fetch request and wait for the response
     const response = await fetch(url);
 
+    // Verificar se a resposta foi bem-sucedida
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Tratar erros específicos
+      if (response.status === 400) {
+        if (errorData.error && errorData.error.message) {
+          if (errorData.error.message.includes("API key") || errorData.error.message.includes("Invalid")) {
+            throw new Error("API_KEY_INVALID");
+          }
+        }
+        throw new Error("BAD_REQUEST");
+      } else if (response.status === 403) {
+        throw new Error("API_KEY_FORBIDDEN");
+      } else if (response.status === 404) {
+        throw new Error("NO_BUILDING_DATA");
+      }
+      
+      throw new Error(`HTTP_ERROR_${response.status}`);
+    }
+
     // Convert response to JSON and return
     const data = await response.json();
+    
+    // Verificar se há dados válidos
+    if (!data || !data.solarPotential) {
+      throw new Error("NO_BUILDING_DATA");
+    }
+    
     return data;
   } catch (error) {
-    console.error("Error:", error);
+    // Re-throw erros conhecidos
+    if (error.message && error.message.startsWith("API_KEY_") || error.message.startsWith("HTTP_ERROR_") || error.message === "NO_BUILDING_DATA" || error.message === "BAD_REQUEST") {
+      throw error;
+    }
+    // Erros de rede ou outros
+    throw new Error("NETWORK_ERROR");
   }
 }
 

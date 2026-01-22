@@ -74,6 +74,17 @@ var initMas = async () => {
   };
   map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
+  // Validar API key após criar o mapa (para ter acesso aos elementos do DOM)
+  if (!apiKey || apiKey === "YOUR_GOOGLE_API_KEY_HERE" || apiKey.includes("YOUR_GOOGLE_API_KEY")) {
+    showError("⚠️ API Key do Google não configurada! Configure sua chave em 'components/gc_solar_api_library/global.js' (linha 16) e 'index.php' (linha 47).");
+    const instructionText = document.getElementById("instruction_text");
+    if (instructionText) {
+      instructionText.innerHTML = "❌ <strong>Configure a API Key do Google</strong> para usar o sistema";
+    }
+    initClickToSelect(); // Ainda permitir interação com o mapa
+    return;
+  }
+
   const url = new URL("https://solar.googleapis.com/v1/dataLayers:get");
 
   // Calcular a zona UTM correta baseada na longitude
@@ -97,47 +108,79 @@ var initMas = async () => {
 
   // Property Data Solar API
   (async () => {
-    var solar_data = await findClosestBuildingInsights(
-      latitude,
-      longitude,
-      apiKey
-    );
-    // Get Data
-    let maxModules = solar_data.solarPotential.maxArrayPanelsCount;
-    let maxSunshineHoursPerYear = Math.round(
-      solar_data.solarPotential.maxSunshineHoursPerYear
-    );
-    let wholeRoofSize = Number(
-      solar_data.solarPotential.wholeRoofStats.areaMeters2.toFixed(2)
-    );
+    try {
+      var solar_data = await findClosestBuildingInsights(
+        latitude,
+        longitude,
+        apiKey
+      );
+      
+      // Verificar se os dados são válidos
+      if (!solar_data || !solar_data.solarPotential) {
+        showError("Não encontramos dados de telhado para esta localização. Tente clicar em outro ponto no mapa.");
+        initClickToSelect();
+        return;
+      }
+      
+      // Get Data
+      let maxModules = solar_data.solarPotential.maxArrayPanelsCount;
+      let maxSunshineHoursPerYear = Math.round(
+        solar_data.solarPotential.maxSunshineHoursPerYear
+      );
+      let wholeRoofSize = Number(
+        solar_data.solarPotential.wholeRoofStats.areaMeters2.toFixed(2)
+      );
 
-    const element_modules_range = document.getElementById(
-      "system_modules_range"
-    );
-    const element_modules_range_watts = document.getElementById(
-      "system_modules_watts"
-    );
-    const element_modules_calculator_display = document.getElementById(
-      "modules_calculator_display"
-    );
+      const element_modules_range = document.getElementById(
+        "system_modules_range"
+      );
+      const element_modules_range_watts = document.getElementById(
+        "system_modules_watts"
+      );
+      const element_modules_calculator_display = document.getElementById(
+        "modules_calculator_display"
+      );
 
-    // Now we can safely call these functions
-    changeMaxValue(element_modules_range, maxModules);
-    calculate_output(
-      element_modules_range,
-      element_modules_range_watts,
-      element_modules_calculator_display
-    );
+      // Now we can safely call these functions
+      if (element_modules_range && maxModules) {
+        changeMaxValue(element_modules_range, maxModules);
+        calculate_output(
+          element_modules_range,
+          element_modules_range_watts,
+          element_modules_calculator_display
+        );
+      }
 
-    let gsa_data = document.getElementById("gsa_data");
-    gsa_data.innerHTML = "Max Module Count: " + maxModules + " modules";
-    gsa_data.innerHTML +=
-      "<br/> Max Annual Sunshine: " + maxSunshineHoursPerYear + " hr";
-    gsa_data.innerHTML +=
-      "<br/> Roof Area: " + wholeRoofSize + " m<sup>2</sup>";
+      let gsa_data = document.getElementById("gsa_data");
+      if (gsa_data) {
+        gsa_data.innerHTML = "Max Module Count: " + maxModules + " modules";
+        gsa_data.innerHTML +=
+          "<br/> Max Annual Sunshine: " + maxSunshineHoursPerYear + " hr";
+        gsa_data.innerHTML +=
+          "<br/> Roof Area: " + wholeRoofSize + " m<sup>2</sup>";
+      }
 
-    // Criar polígonos clicáveis para cada segmento de telhado
-    createRoofSegmentPolygons(solar_data);
+      // Criar polígonos clicáveis para cada segmento de telhado
+      createRoofSegmentPolygons(solar_data);
+      
+    } catch (error) {
+      // Tratar erros específicos da API
+      let errorMessage = "Ocorreu um erro ao carregar os dados do telhado.";
+      
+      if (error.message === "API_KEY_NOT_CONFIGURED") {
+        errorMessage = "⚠️ API Key do Google não configurada! Configure sua chave em 'components/gc_solar_api_library/global.js' e 'index.php'";
+      } else if (error.message === "API_KEY_INVALID") {
+        errorMessage = "⚠️ API Key do Google inválida! Verifique se a chave está correta e se as APIs necessárias estão ativadas (Maps JavaScript API, Solar API, Geocoding API).";
+      } else if (error.message === "API_KEY_FORBIDDEN") {
+        errorMessage = "⚠️ API Key do Google sem permissão! Verifique as restrições da chave e se as APIs estão ativadas.";
+      } else if (error.message === "NO_BUILDING_DATA") {
+        errorMessage = "Não encontramos dados de telhado para esta localização. Tente clicar em outro ponto no mapa.";
+      } else if (error.message === "NETWORK_ERROR") {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+      }
+      
+      showError(errorMessage);
+    }
     
     // Inicializar funcionalidade de clique para selecionar telhado
     initClickToSelect();
@@ -387,9 +430,13 @@ function createRoofBoundingBox(solarData) {
  * Exibe a área do telhado para orçamentos
  */
 function createRoofSegmentPolygons(solarData) {
-  // Limpar marcadores anteriores
+  // Limpar marcadores e polígonos anteriores
   roofSegments.forEach(item => item.setMap(null));
+  segmentPolygons.forEach(polygon => polygon.setMap(null));
+  segmentMarkers.forEach(marker => marker.setMap(null));
   roofSegments = [];
+  segmentPolygons = [];
+  segmentMarkers = [];
   roofSegmentData = [];
   excludedSegments = []; // Limpar segmentos excluídos
   
@@ -431,6 +478,12 @@ function createRoofSegmentPolygons(solarData) {
   // Renderizar lista de segmentos e marcadores
   renderSegmentsList(segments);
   renderSegmentMarkers(segments);
+  
+  // Mostrar botão de toggle de polígonos se houver segmentos
+  const toggleBtnMain = document.getElementById('toggle_polygons_btn_main');
+  if (toggleBtnMain && segments.length > 0) {
+    toggleBtnMain.style.display = 'block';
+  }
 }
 
 /**
@@ -637,7 +690,10 @@ function renderSegmentMarkers(segments) {
     );
     
     if (polygon) {
+      segmentPolygons.push(polygon);
       roofSegments.push(polygon);
+      // Aplicar visibilidade inicial
+      polygon.setMap(showSegmentPolygons ? map : null);
     }
     
     // Criar marcador clicável no centro
@@ -672,6 +728,7 @@ function renderSegmentMarkers(segments) {
       marker.setTitle(`Clique para ${newExcluded ? 'restaurar' : 'remover'} - Segmento ${index + 1}: ${area.toFixed(2)} m²`);
     });
     
+    segmentMarkers.push(marker);
     roofSegments.push(marker);
   });
 }
@@ -764,10 +821,10 @@ function updatePolygonAppearance(segmentIndex) {
   const colors = ['#FF5722', '#2196F3', '#4CAF50', '#9C27B0', '#FF9800', '#00BCD4', '#E91E63', '#8BC34A'];
   const color = colors[segmentIndex % colors.length];
   
-  // Encontrar o polígono correspondente
-  roofSegments.forEach(item => {
-    if (item.segmentIndex === segmentIndex && item.setOptions) {
-      item.setOptions({
+  // Encontrar o polígono correspondente no array de polígonos
+  segmentPolygons.forEach(polygon => {
+    if (polygon.segmentIndex === segmentIndex && polygon.setOptions) {
+      polygon.setOptions({
         strokeColor: isExcluded ? '#9E9E9E' : color,
         strokeOpacity: isExcluded ? 0.4 : 0.9,
         fillColor: isExcluded ? '#9E9E9E' : color,
@@ -775,6 +832,32 @@ function updatePolygonAppearance(segmentIndex) {
       });
     }
   });
+}
+
+/**
+ * Mostrar/ocultar apenas os polígonos dos segmentos (mantém marcadores visíveis)
+ */
+function toggleSegmentPolygonsVisibility(show) {
+  showSegmentPolygons = show;
+  segmentPolygons.forEach(polygon => {
+    polygon.setMap(show ? map : null);
+  });
+  
+  // Atualizar botões na interface
+  const toggleBtn = document.getElementById('toggle_polygons_btn');
+  const toggleBtnMain = document.getElementById('toggle_polygons_btn_main');
+  
+  const buttonText = show ? '🙈 Ocultar Polígonos' : '👁️ Mostrar Polígonos';
+  
+  if (toggleBtn) {
+    toggleBtn.textContent = buttonText;
+    toggleBtn.classList.toggle('active', show);
+  }
+  
+  if (toggleBtnMain) {
+    toggleBtnMain.textContent = buttonText;
+    toggleBtnMain.classList.toggle('active', show);
+  }
 }
 
 /**
@@ -952,7 +1035,11 @@ async function recalculateRoofArea(newLat, newLng) {
       if (result && result.success) {
         // Limpar elementos anteriores
         roofSegments.forEach(item => item.setMap(null));
+        segmentPolygons.forEach(polygon => polygon.setMap(null));
+        segmentMarkers.forEach(marker => marker.setMap(null));
         roofSegments = [];
+        segmentPolygons = [];
+        segmentMarkers = [];
         roofSegmentData = [];
         
         // Remover polígono anterior se existir
@@ -1014,12 +1101,17 @@ async function recalculateRoofArea(newLat, newLng) {
       
     } else {
       // Usar Google Solar API (método padrão)
-      const solarData = await findClosestBuildingInsights(newLat, newLng, apiKey);
-      
-      if (solarData && solarData.solarPotential && solarData.solarPotential.wholeRoofStats) {
+      try {
+        const solarData = await findClosestBuildingInsights(newLat, newLng, apiKey);
+        
+        if (solarData && solarData.solarPotential && solarData.solarPotential.wholeRoofStats) {
         // Limpar elementos anteriores
         roofSegments.forEach(item => item.setMap(null));
+        segmentPolygons.forEach(polygon => polygon.setMap(null));
+        segmentMarkers.forEach(marker => marker.setMap(null));
         roofSegments = [];
+        segmentPolygons = [];
+        segmentMarkers = [];
         roofSegmentData = [];
         
         // Remover polígono anterior se existir
@@ -1049,11 +1141,32 @@ async function recalculateRoofArea(newLat, newLng) {
           instructionText.innerHTML = "⚠️ Telhado não encontrado. <strong>Clique em outro local</strong> no mapa";
         }
       }
+      } catch (apiError) {
+        // Tratar erros específicos da API
+        let errorMessage = "Ocorreu um erro ao calcular a área. Tente novamente.";
+        
+        if (apiError.message === "API_KEY_NOT_CONFIGURED") {
+          errorMessage = "⚠️ API Key do Google não configurada! Configure sua chave em 'components/gc_solar_api_library/global.js' e 'index.php'";
+        } else if (apiError.message === "API_KEY_INVALID") {
+          errorMessage = "⚠️ API Key do Google inválida! Verifique se a chave está correta e se as APIs necessárias estão ativadas.";
+        } else if (apiError.message === "API_KEY_FORBIDDEN") {
+          errorMessage = "⚠️ API Key do Google sem permissão! Verifique as restrições da chave.";
+        } else if (apiError.message === "NO_BUILDING_DATA") {
+          errorMessage = "Não encontramos dados de telhado para esta localização. Tente clicar em outro ponto no mapa.";
+        } else if (apiError.message === "NETWORK_ERROR") {
+          errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+        }
+        
+        showError(errorMessage);
+        
+        if (instructionText) {
+          instructionText.innerHTML = "❌ Erro ao calcular. <strong>Clique em outro local</strong> para tentar novamente";
+        }
+      }
     }
     
   } catch (error) {
-    console.error("Erro ao recalcular área:", error);
-    showError("Ocorreu um erro ao calcular a área. Tente novamente.");
+    showError("Ocorreu um erro inesperado. Tente novamente.");
     
     if (instructionText) {
       instructionText.innerHTML = "❌ Erro ao calcular. <strong>Clique em outro local</strong> para tentar novamente";

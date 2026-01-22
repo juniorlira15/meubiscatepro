@@ -44,12 +44,24 @@
     <script src="services/roboflowSegmentation.js" defer></script>
     <script src="services/manualSegmentation.js" defer></script>
     <!-- Google Maps API - sem defer para garantir que a função callback esteja disponível -->
-    <script async src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY_HERE&loading=async&callback=onGoogleMapsLoaded&libraries=maps,marker&v=beta"></script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1hSEH2QjrDs3UN9ypCXsOVRs3HinF8ng&loading=async&callback=onGoogleMapsLoaded&libraries=maps,marker&v=beta"></script>
 
 
 </head>
 
 <body>
+    <!-- Aviso de API Key não configurada -->
+    <div id="api_key_warning" style="display: none; background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%); color: white; padding: 1rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; position: relative;">
+        <div class="container">
+            <h4 style="margin: 0 0 0.5rem 0; color: white;">⚠️ API Key do Google não configurada!</h4>
+            <p style="margin: 0; font-size: 0.9rem;">
+                Configure sua chave de API em <strong>components/gc_solar_api_library/global.js</strong> (linha 16) e <strong>index.php</strong> (linha 47).
+                <br>
+                <a href="COMO_CONFIGURAR_API_KEY.md" target="_blank" style="color: #FFE3C8; text-decoration: underline; font-weight: bold;">📖 Ver guia completo de configuração</a>
+            </p>
+        </div>
+    </div>
+    
     <!-- Page Header -->
     <header class="container">
         <div class="row">
@@ -152,7 +164,15 @@
     <!-- Painel de Área do Telhado para Orçamentos -->
     <div class="row" id="roof_area_panel" style="display: none; margin-top: 20px;">
         <div class="col-md-8 text-center">
-            <h2>🏠 Área do Telhado</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">🏠 Área do Telhado</h2>
+                <button id="toggle_polygons_btn_main" onclick="togglePolygonsVisibility()" 
+                        class="btn-toggle-polygons" 
+                        style="display: none;"
+                        title="Mostrar/ocultar polígonos dos segmentos no mapa">
+                    🙈 Ocultar Polígonos
+                </button>
+            </div>
             <div class="roof-area-result">
                 <div class="roof-area-value">
                     <span id="total_roof_area">-</span>
@@ -178,7 +198,14 @@
     <!-- Segmentos do telhado (se houver múltiplas águas) -->
     <div class="row" id="roof_segments_list" style="display: none; margin-top: 10px;">
         <div class="col-12">
-            <h3>📐 Detalhes por Segmento</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">📐 Detalhes por Segmento</h3>
+                <button id="toggle_polygons_btn" onclick="togglePolygonsVisibility()" 
+                        class="btn-toggle-polygons" 
+                        title="Mostrar/ocultar polígonos dos segmentos no mapa">
+                    🙈 Ocultar Polígonos
+                </button>
+            </div>
             <p><em>O telhado possui múltiplas águas/seções</em></p>
             <p class="segment-instruction">
                 <strong>💡 Dica:</strong> Clique em um marcador <span class="marker-example">●</span> no mapa ou no botão ❌ para remover da área total
@@ -197,6 +224,36 @@
         </div>
     </div>
 
+    <!-- Script de verificação de API Key -->
+    <script>
+        // Verificar se a API key está configurada ao carregar a página
+        (function() {
+            // Verificar no script do Google Maps
+            const mapsScript = document.querySelector('script[src*="maps.googleapis.com"]');
+            if (mapsScript) {
+                const scriptSrc = mapsScript.getAttribute('src');
+                if (scriptSrc.includes('YOUR_GOOGLE_API_KEY') || scriptSrc.includes('YOUR_GOOGLE_API_KEY_HERE')) {
+                    const warningDiv = document.getElementById('api_key_warning');
+                    if (warningDiv) {
+                        warningDiv.style.display = 'block';
+                    }
+                }
+            }
+            
+            // Verificar também quando global.js carregar
+            window.addEventListener('load', function() {
+                if (typeof apiKey !== 'undefined' && 
+                    (apiKey === 'YOUR_GOOGLE_API_KEY_HERE' || 
+                     apiKey.includes('YOUR_GOOGLE_API_KEY'))) {
+                    const warningDiv = document.getElementById('api_key_warning');
+                    if (warningDiv) {
+                        warningDiv.style.display = 'block';
+                    }
+                }
+            });
+        })();
+    </script>
+    
     <!-- Script de controle dos métodos de segmentação -->
     <script>
         // Variável global para o método atual
@@ -294,6 +351,16 @@
                 map: map,
                 zIndex: 50
             });
+        }
+        
+        // Função para alternar visibilidade dos polígonos
+        function togglePolygonsVisibility() {
+            if (typeof toggleSegmentPolygonsVisibility === 'function') {
+                const toggleBtn = document.getElementById('toggle_polygons_btn');
+                const currentText = toggleBtn.textContent;
+                const isCurrentlyVisible = currentText.includes('Ocultar');
+                toggleSegmentPolygonsVisibility(!isCurrentlyVisible);
+            }
         }
     </script>
 
